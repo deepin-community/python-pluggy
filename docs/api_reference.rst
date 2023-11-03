@@ -1,16 +1,49 @@
 :orphan:
 
-Api Reference
+.. _`api-reference`:
+
+API Reference
 =============
 
-.. automodule:: pluggy
+.. autoclass:: pluggy.PluginManager
     :members:
-    :undoc-members:
+
+.. autoclass:: pluggy.PluginValidationError
     :show-inheritance:
+    :members:
 
+.. autodecorator:: pluggy.HookspecMarker
 
-.. automethod:: pluggy.callers._Result.get_result
+.. autodecorator:: pluggy.HookimplMarker
 
-.. automethod:: pluggy.callers._Result.force_result
+.. autoclass:: pluggy.HookRelay()
+    :members:
 
-.. automethod:: pluggy.hooks._HookCaller.call_extra
+    .. data:: <hook name>
+
+        :type: HookCaller
+
+        The caller for the hook with the given name.
+
+.. autoclass:: pluggy.HookCaller()
+    :members:
+    :special-members: __call__
+
+.. autoclass:: pluggy.HookCallError()
+    :show-inheritance:
+    :members:
+
+.. autoclass:: pluggy.Result()
+    :show-inheritance:
+    :members:
+
+.. autoclass:: pluggy.HookImpl()
+    :members:
+
+.. autoclass:: pluggy.HookspecOpts()
+    :show-inheritance:
+    :members:
+
+.. autoclass:: pluggy.HookimplOpts()
+    :show-inheritance:
+    :members:
