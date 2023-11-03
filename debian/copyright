@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: pluggy
-Source: https://pypi.python.org/pypi/pluggy
+Source: https://github.com/pytest-dev/pluggy
 
 Files: *
 Copyright: (c) 2015 holger krekel (rather uses bitbucket/hpk42)
