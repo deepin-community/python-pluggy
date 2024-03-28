@@ -416,9 +416,11 @@ of the hook thus far, or, if the previous calls raised an exception, it is
 :py:meth:`thrown <python:generator.throw>` the exception.
 
 The function should do one of two things:
-- Return a value, which can be the same value as received from the ``yield``, or
-something else entirely.
+
+- Return a value, which can be the same value as received from the ``yield``, or something else entirely.
+
 - Raise an exception.
+
 The return value or exception propagate to further hook wrappers, and finally
 to the hook caller.
 
@@ -1028,11 +1030,11 @@ Table of contents
 .. _callbacks:
     https://en.wikipedia.org/wiki/Callback_(computer_programming)
 .. _tox test suite:
-    https://github.com/pytest-dev/pluggy/blob/master/tox.ini
+    https://github.com/pytest-dev/pluggy/blob/main/tox.ini
 .. _Semantic Versioning:
     https://semver.org/
 .. _Python interpreters:
-    https://github.com/pytest-dev/pluggy/blob/master/tox.ini#L2
+    https://github.com/pytest-dev/pluggy/blob/main/tox.ini#L2
 .. _500+ plugins:
     https://docs.pytest.org/en/latest/reference/plugin_list.html
 .. _pre-commit:
