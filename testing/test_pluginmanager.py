@@ -110,6 +110,13 @@ def test_set_blocked(pm: PluginManager) -> None:
     pm.unregister(name="somename")
     assert pm.is_blocked("somename")
 
+    # Unblock.
+    assert not pm.unblock("someothername")
+    assert pm.unblock("somename")
+    assert not pm.is_blocked("somename")
+    assert not pm.unblock("somename")
+    assert pm.register(A(), "somename")
+
 
 def test_register_mismatch_method(he_pm: PluginManager) -> None:
     class hello:
@@ -675,3 +682,79 @@ def test_hook_tracing(he_pm: PluginManager) -> None:
         assert saveindent[0] > indent
     finally:
         undo()
+
+
+@pytest.mark.parametrize("historic", [False, True])
+def test_register_while_calling(
+    pm: PluginManager,
+    historic: bool,
+) -> None:
+    """Test that registering an impl of a hook while it is being called does
+    not affect the call itself, only later calls.
+
+    For historic hooks however, the hook is called immediately on registration.
+
+    Regression test for #438.
+    """
+    hookspec = HookspecMarker("example")
+
+    class Hooks:
+        @hookspec(historic=historic)
+        def configure(self) -> int:
+            raise NotImplementedError()
+
+    class Plugin1:
+        @hookimpl
+        def configure(self) -> int:
+            return 1
+
+    class Plugin2:
+        def __init__(self) -> None:
+            self.already_registered = False
+
+        @hookimpl
+        def configure(self) -> int:
+            if not self.already_registered:
+                pm.register(Plugin4())
+                pm.register(Plugin5())
+                pm.register(Plugin6())
+                self.already_registered = True
+            return 2
+
+    class Plugin3:
+        @hookimpl
+        def configure(self) -> int:
+            return 3
+
+    class Plugin4:
+        @hookimpl(tryfirst=True)
+        def configure(self) -> int:
+            return 4
+
+    class Plugin5:
+        @hookimpl()
+        def configure(self) -> int:
+            return 5
+
+    class Plugin6:
+        @hookimpl(trylast=True)
+        def configure(self) -> int:
+            return 6
+
+    pm.add_hookspecs(Hooks)
+    pm.register(Plugin1())
+    pm.register(Plugin2())
+    pm.register(Plugin3())
+
+    if not historic:
+        result = pm.hook.configure()
+        assert result == [3, 2, 1]
+        result = pm.hook.configure()
+        assert result == [4, 5, 3, 2, 1, 6]
+    else:
+        result = []
+        pm.hook.configure.call_historic(result.append)
+        assert result == [4, 5, 6, 3, 2, 1]
+        result = []
+        pm.hook.configure.call_historic(result.append)
+        assert result == [4, 5, 3, 2, 1, 6]
