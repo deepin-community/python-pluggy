@@ -6,7 +6,7 @@ What is it?
 ***********
 ``pluggy`` is the crystallized core of :ref:`plugin management and hook
 calling <pytest:writing-plugins>` for :std:doc:`pytest <pytest:index>`.
-It enables `500+ plugins`_ to extend and customize ``pytest``'s default
+It enables `1400+ plugins`_ to extend and customize ``pytest``'s default
 behaviour. Even ``pytest`` itself is composed as a set of ``pluggy`` plugins
 which are invoked in sequence according to a well defined set of protocols.
 
@@ -162,7 +162,7 @@ documentation and source code:
 * :ref:`pytest <pytest:writing-plugins>`
 * :std:doc:`tox <tox:plugins>`
 * :std:doc:`devpi <devpi:devguide/index>`
-* :std:doc:`kedro <kedro:kedro.framework.hooks.specs>`
+* :std:doc:`kedro <kedro:hooks/introduction>`
 
 For more details and advanced usage please read on.
 
@@ -291,12 +291,15 @@ To override the default behavior, a *hookimpl* may also be matched to a
 the ``specname`` option.  Continuing the example above, the *hookimpl* function
 does not need to be named ``setup_project``, but if the argument
 ``specname="setup_project"`` is provided to the ``hookimpl`` decorator, it will
-be matched and checked against the ``setup_project`` hookspec:
+be matched and checked against the ``setup_project`` hookspec.
+
+This is useful for registering multiple implementations of the same plugin in
+the same Python file, for example:
 
 .. code-block:: python
 
     @hookimpl(specname="setup_project")
-    def any_plugin_function(config, args):
+    def setup_1(config, args):
         """This hook is used to process the initial config
         and possibly input arguments.
         """
@@ -304,6 +307,14 @@ be matched and checked against the ``setup_project`` hookspec:
             config.process_args(args)
 
         return config
+
+
+    @hookimpl(specname="setup_project")
+    def setup_2(config, args):
+        """Perform additional setup steps"""
+        # ...
+        return config
+
 
 .. _callorder:
 
@@ -379,7 +390,7 @@ Wrappers
 A *hookimpl* can be marked with the ``"wrapper"`` option, which indicates
 that the function will be called to *wrap* (or surround) all other normal
 *hookimpl* calls. A *hook wrapper* can thus execute some code ahead and after the
-execution of all corresponding non-wrappper *hookimpls*.
+execution of all corresponding non-wrapper *hookimpls*.
 
 Much in the same way as a :py:func:`@contextlib.contextmanager <python:contextlib.contextmanager>`,
 *hook wrappers* must be implemented as generator function with a single ``yield`` in its body:
@@ -416,9 +427,11 @@ of the hook thus far, or, if the previous calls raised an exception, it is
 :py:meth:`thrown <python:generator.throw>` the exception.
 
 The function should do one of two things:
-- Return a value, which can be the same value as received from the ``yield``, or
-something else entirely.
+
+- Return a value, which can be the same value as received from the ``yield``, or something else entirely.
+
 - Raise an exception.
+
 The return value or exception propagate to further hook wrappers, and finally
 to the hook caller.
 
@@ -436,7 +449,7 @@ Old-style wrappers
 A *hookimpl* can be marked with the ``"hookwrapper"`` option, which indicates
 that the function will be called to *wrap* (or surround) all other normal
 *hookimpl* calls. A *hookwrapper* can thus execute some code ahead and after the
-execution of all corresponding non-wrappper *hookimpls*.
+execution of all corresponding non-wrapper *hookimpls*.
 
 *hookwrappers* must be implemented as generator function with a single ``yield`` in its body:
 
@@ -646,10 +659,33 @@ If a hookspec specifies a ``warn_on_impl``, pluggy will trigger it for any plugi
 .. code-block:: python
 
     @hookspec(
-        warn_on_impl=DeprecationWarning("oldhook is deprecated and will be removed soon")
+        warn_on_impl=DeprecationWarning("old_hook is deprecated and will be removed soon")
     )
-    def oldhook():
+    def old_hook():
         pass
+
+
+If you don't want to deprecate implementing the entire hook, but just specific
+parameters of it, you can specify ``warn_on_impl_args``, a dict mapping
+parameter names to warnings. The warnings will trigger whenever any plugin
+implements the hook requesting one of the specified parameters.
+
+.. code-block:: python
+
+    @hookspec(
+        warn_on_impl_args={
+            "lousy_arg": DeprecationWarning(
+                "The lousy_arg parameter of refreshed_hook is deprecated and will be removed soon; "
+                "use awesome_arg instead"
+            ),
+        },
+    )
+    def refreshed_hook(lousy_arg, awesome_arg):
+        pass
+
+.. versionadded:: 1.5
+   The ``warn_on_impl_args`` parameter.
+
 
 .. _manage:
 
@@ -1028,12 +1064,12 @@ Table of contents
 .. _callbacks:
     https://en.wikipedia.org/wiki/Callback_(computer_programming)
 .. _tox test suite:
-    https://github.com/pytest-dev/pluggy/blob/master/tox.ini
+    https://github.com/pytest-dev/pluggy/blob/main/tox.ini
 .. _Semantic Versioning:
     https://semver.org/
 .. _Python interpreters:
-    https://github.com/pytest-dev/pluggy/blob/master/tox.ini#L2
-.. _500+ plugins:
+    https://github.com/pytest-dev/pluggy/blob/main/tox.ini#L2
+.. _1400+ plugins:
     https://docs.pytest.org/en/latest/reference/plugin_list.html
 .. _pre-commit:
     https://pre-commit.com/

@@ -13,19 +13,28 @@ Build-Depends:
  python3-pytest <!nocheck>,
  python3-setuptools,
  python3-setuptools-scm,
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: https://salsa.debian.org/python-team/packages/python-pluggy.git
 Vcs-Browser: https://salsa.debian.org/python-team/packages/python-pluggy
 Testsuite: autopkgtest-pkg-pybuild
 Rules-Requires-Root: no
+Description: plugin and hook calling mechanisms for Python
+ pluggy is the crystallized core of plugin management and hook calling for
+ pytest. It enables 1400+ plugins to extend and customize pytest’s default
+ behaviour. Even pytest itself is composed as a set of pluggy plugins which are
+ invoked in sequence according to a well defined set of protocols.
+ .
+ It gives users the ability to extend or modify the behaviour of a host program
+ by installing a plugin for that program. The plugin code will run as part of
+ normal program execution, changing or enhancing certain aspects of it.
 
 Package: python3-pluggy
 Architecture: all
 Depends:
  ${misc:Depends},
  ${python3:Depends},
-Description: plugin and hook calling mechanisms for Python - 3.x
- pluggy is the cristallized core of plugin management as used by some 150
- plugins for pytest.
+Description: ${source:Synopsis} 3
+ ${source:Extended-Description}
  .
  This is the Python 3 library.
+
