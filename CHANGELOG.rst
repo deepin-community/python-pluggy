@@ -21,6 +21,43 @@ Versions follow `Semantic Versioning <https://semver.org/>`_ (``<major>.<minor>.
 
 .. towncrier release notes start
 
+pluggy 1.5.0 (2024-04-19)
+=========================
+
+Features
+--------
+
+- `#178 <https://github.com/pytest-dev/pluggy/issues/178>`_: Add support for deprecating specific hook parameters, or more generally, for issuing a warning whenever a hook implementation requests certain parameters.
+
+  See :ref:`warn_on_impl` for details.
+
+
+
+Bug Fixes
+---------
+
+- `#481 <https://github.com/pytest-dev/pluggy/issues/481>`_: ``PluginManager.get_plugins()`` no longer returns ``None`` for blocked plugins.
+
+
+pluggy 1.4.0 (2024-01-24)
+=========================
+
+Features
+--------
+
+- `#463 <https://github.com/pytest-dev/pluggy/issues/463>`_: A warning :class:`~pluggy.PluggyTeardownRaisedWarning` is now issued when an old-style hookwrapper raises an exception during teardown.
+  See the warning documentation for more details.
+
+- `#471 <https://github.com/pytest-dev/pluggy/issues/471>`_: Add :func:`PluginManager.unblock <pluggy.PluginManager.unblock>` method to unblock a plugin by plugin name.
+
+Bug Fixes
+---------
+
+- `#441 <https://github.com/pytest-dev/pluggy/issues/441>`_: Fix :func:`~pluggy.HookCaller.call_extra()` extra methods getting ordered before everything else in some circumstances. Regressed in pluggy 1.1.0.
+
+- `#438 <https://github.com/pytest-dev/pluggy/issues/438>`_: Fix plugins registering other plugins in a hook when the other plugins implement the same hook itself. Regressed in pluggy 1.1.0.
+
+
 pluggy 1.3.0 (2023-08-26)
 =========================
 
@@ -148,7 +185,7 @@ Features
 --------
 
 - `#282 <https://github.com/pytest-dev/pluggy/issues/282>`_: When registering a hookimpl which is declared as ``hookwrapper=True`` but whose
-  function is not a generator function, a ``PluggyValidationError`` exception is
+  function is not a generator function, a :class:`~pluggy.PluginValidationError` exception is
   now raised.
 
   Previously this problem would cause an error only later, when calling the hook.
@@ -158,7 +195,7 @@ Features
 
   .. code-block:: python
 
-      def my_hook_real_implementation(arg):
+      def my_hook_implementation(arg):
           print("before")
           yield
           print("after")

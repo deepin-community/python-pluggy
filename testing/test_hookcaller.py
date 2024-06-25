@@ -1,4 +1,5 @@
 from typing import Callable
+from typing import Generator
 from typing import List
 from typing import Sequence
 from typing import TypeVar
@@ -11,6 +12,7 @@ from pluggy import PluginManager
 from pluggy import PluginValidationError
 from pluggy._hooks import HookCaller
 from pluggy._hooks import HookImpl
+
 
 hookspec = HookspecMarker("example")
 hookimpl = HookimplMarker("example")
@@ -210,20 +212,17 @@ def test_adding_wrappers_complex(hc: HookCaller, addmeth: AddMeth) -> None:
     assert funcs(hc.get_hookimpls()) == [m1]
 
     @addmeth()
-    def m2() -> None:
-        ...
+    def m2() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [m2, m1]
 
     @addmeth(trylast=True)
-    def m3() -> None:
-        ...
+    def m3() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [m3, m2, m1]
 
     @addmeth(hookwrapper=True)
-    def m4() -> None:
-        ...
+    def m4() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [m3, m2, m1, m4]
 
@@ -234,14 +233,12 @@ def test_adding_wrappers_complex(hc: HookCaller, addmeth: AddMeth) -> None:
     assert funcs(hc.get_hookimpls()) == [m3, m2, m1, m4, m5]
 
     @addmeth(tryfirst=True)
-    def m6() -> None:
-        ...
+    def m6() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [m3, m2, m6, m1, m4, m5]
 
     @addmeth()
-    def m7() -> None:
-        ...
+    def m7() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [m3, m2, m7, m6, m1, m4, m5]
 
@@ -252,20 +249,17 @@ def test_adding_wrappers_complex(hc: HookCaller, addmeth: AddMeth) -> None:
     assert funcs(hc.get_hookimpls()) == [m3, m2, m7, m6, m1, m4, m8, m5]
 
     @addmeth(trylast=True)
-    def m9() -> None:
-        ...
+    def m9() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [m9, m3, m2, m7, m6, m1, m4, m8, m5]
 
     @addmeth(tryfirst=True)
-    def m10() -> None:
-        ...
+    def m10() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [m9, m3, m2, m7, m6, m10, m1, m4, m8, m5]
 
     @addmeth(hookwrapper=True, trylast=True)
-    def m11() -> None:
-        ...
+    def m11() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [m9, m3, m2, m7, m6, m10, m11, m1, m4, m8, m5]
 
@@ -289,8 +283,7 @@ def test_adding_wrappers_complex(hc: HookCaller, addmeth: AddMeth) -> None:
     ]
 
     @addmeth()
-    def m13() -> None:
-        ...
+    def m13() -> None: ...
 
     assert funcs(hc.get_hookimpls()) == [
         m9,
@@ -448,3 +441,74 @@ def test_hook_conflict(pm: PluginManager) -> None:
         "Hook 'conflict' is already registered within namespace "
         "<class 'test_hookcaller.test_hook_conflict.<locals>.Api1'>"
     )
+
+
+def test_call_extra_hook_order(hc: HookCaller, addmeth: AddMeth) -> None:
+    """Ensure that call_extra is calling hooks in the right order."""
+    order = []
+
+    @addmeth(tryfirst=True)
+    def method1() -> str:
+        order.append("1")
+        return "1"
+
+    @addmeth()
+    def method2() -> str:
+        order.append("2")
+        return "2"
+
+    @addmeth(trylast=True)
+    def method3() -> str:
+        order.append("3")
+        return "3"
+
+    @addmeth(wrapper=True, tryfirst=True)
+    def method4() -> Generator[None, str, str]:
+        order.append("4pre")
+        result = yield
+        order.append("4post")
+        return result
+
+    @addmeth(wrapper=True)
+    def method5() -> Generator[None, str, str]:
+        order.append("5pre")
+        result = yield
+        order.append("5post")
+        return result
+
+    @addmeth(wrapper=True, trylast=True)
+    def method6() -> Generator[None, str, str]:
+        order.append("6pre")
+        result = yield
+        order.append("6post")
+        return result
+
+    def extra1() -> str:
+        order.append("extra1")
+        return "extra1"
+
+    def extra2() -> str:
+        order.append("extra2")
+        return "extra2"
+
+    result = hc.call_extra([extra1, extra2], {"arg": "test"})
+    assert order == [
+        "4pre",
+        "5pre",
+        "6pre",
+        "1",
+        "extra2",
+        "extra1",
+        "2",
+        "3",
+        "6post",
+        "5post",
+        "4post",
+    ]
+    assert result == [
+        "1",
+        "extra2",
+        "extra1",
+        "2",
+        "3",
+    ]
