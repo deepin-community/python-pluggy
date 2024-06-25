@@ -1,9 +1,10 @@
 """
 Release script.
 """
+
 import argparse
-import sys
 from subprocess import check_call
+import sys
 
 from colorama import Fore
 from colorama import init

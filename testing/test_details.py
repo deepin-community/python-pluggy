@@ -4,6 +4,7 @@ from pluggy import HookimplMarker
 from pluggy import HookspecMarker
 from pluggy import PluginManager
 
+
 hookspec = HookspecMarker("example")
 hookimpl = HookimplMarker("example")
 
@@ -90,6 +91,39 @@ def test_warn_when_deprecated_specified(recwarn) -> None:
     assert record.message is warning
     assert record.filename == Plugin.foo.__code__.co_filename
     assert record.lineno == Plugin.foo.__code__.co_firstlineno
+
+
+def test_warn_when_deprecated_args_specified(recwarn) -> None:
+    warning1 = DeprecationWarning("old1 is deprecated")
+    warning2 = DeprecationWarning("old2 is deprecated")
+
+    class Spec:
+        @hookspec(
+            warn_on_impl_args={
+                "old1": warning1,
+                "old2": warning2,
+            },
+        )
+        def foo(self, old1, new, old2):
+            raise NotImplementedError()
+
+    class Plugin:
+        @hookimpl
+        def foo(self, old2, old1, new):
+            raise NotImplementedError()
+
+    pm = PluginManager(hookspec.project_name)
+    pm.add_hookspecs(Spec)
+
+    with pytest.warns(DeprecationWarning) as records:
+        pm.register(Plugin())
+    (record1, record2) = records
+    assert record1.message is warning2
+    assert record1.filename == Plugin.foo.__code__.co_filename
+    assert record1.lineno == Plugin.foo.__code__.co_firstlineno
+    assert record2.message is warning1
+    assert record2.filename == Plugin.foo.__code__.co_filename
+    assert record2.lineno == Plugin.foo.__code__.co_firstlineno
 
 
 def test_plugin_getattr_raises_errors() -> None:
